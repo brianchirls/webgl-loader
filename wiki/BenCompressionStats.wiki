@@ -6,3 +6,9 @@
 || .JS (32-bit) || 5,275,346 || 1,543,449 ||
 || .JS (16-bit) || 3,074,531 || 963,831   ||
 || UTF-8        || 717,263   || 484,031   ||
+
+*.JS (32-bit)* is encoded using floats, just like the .OBJ. The big difference in size comes from .OBJs index format. Like most modelling formats, .OBJ uses an index per attribute, rather than per vertex. For example, vertices along a crease can share position indices but have distinct normal or texcoords. During conversion, these vertices end up getting duplicated, but the triangle indices take way less space.
+
+*.JS (16-bit)* uses quantized attributes at the same precision as Google Body. 14-bits per dimension position, and 10-bits per dimension for normals and texcoords. Note that, even as text, the file is much smaller and compresses much better.
+
+This is probably excess resolution. Body needed 14-bits for position because it had lots of fine features (e.g. blood vessels, nerves), but 10-bits for normals/texcoords were probably too much. At the time, I was particularly concerned about texture warp due to texcoord quantization. An important note: positions are encoded using uniform quantization. That is, the scale chosen is that of the largest dimension of the bounding box.
