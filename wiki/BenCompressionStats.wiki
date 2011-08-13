@@ -1,11 +1,11 @@
 #summary Compression Stats for ben_00.obj
 
 
-||              || Raw       || GZIP      || GZIP % ||
-|| .OBJ         || 6,387,698 || 1,864,867 || 29.19% ||
-|| .JS (32-bit) || 5,275,346 || 1,543,449 || 29.26% ||
-|| .JS (16-bit) || 3,074,531 || 963,831   || 31.35% ||
-|| UTF-8        || 717,263   || 484,031   || 67.48% ||
+||              || Raw Bytes || GZIP Bytes || GZIP % ||
+|| .OBJ         || 6,387,698 || 1,864,867  || 29.19% ||
+|| .JS (32-bit) || 5,275,346 || 1,543,449  || 29.26% ||
+|| .JS (16-bit) || 3,074,531 || 963,831    || 31.35% ||
+|| UTF-8        || 717,263   || 484,031    || 67.48% ||
 
 *.OBJ* is the original file, found at [http://www.sci.utah.edu/~wald/animrep/ The Utah 3D Animation Repository].
 
