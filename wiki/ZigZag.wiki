@@ -1,6 +1,6 @@
 #summary An encoding for signed delta compression.
 
-Delta compression makes perfect sense for unsigned values: use fewer bytes for smaller values. However, delta coding usually creates signed values. This interacts poorly with two's complement arithmetic. Simply interpreting the bits of a small negative number as an unsigned number yields a very large positive number. For example, -1 as a 16-bit unsigned integer maps to 65,535.
+Delta compression makes perfect sense when variable-length encoding unsigned values: use fewer bytes for smaller values. However, delta coding usually creates signed values. This interacts poorly with two's complement arithmetic; simply interpreting the bits of a small negative number as an unsigned number yields a very large positive number. For example, -1 as a 16-bit unsigned integer maps to 65,535. Naively, then, small negative numbers require more than expected bytes to encode.
 
 We'd rather map small negative numbers to small positive numbers. Fortunately, this has been solved before. The Google Protocol Buffer project includes [http://code.google.com/apis/protocolbuffers/docs/encoding.html#types a description of ZigZag encoding]. The exact C code used to ZigZag encode in this library is:
 
