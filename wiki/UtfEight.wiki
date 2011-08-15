@@ -1,0 +1,1 @@
+#summary UTF-8 is a convenient variable-length encoding scheme on the web.
