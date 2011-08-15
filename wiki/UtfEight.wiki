@@ -1,1 +1,5 @@
-#summary UTF-8 is a convenient variable-length encoding scheme on the web.
+#summary UTF-8 is a convenient variable-length encoding scheme on the web
+
+The biggest constraint for WebGL mesh compression is that there just isn't much you can do in Javascript; even though it has gotten much faster as of late (and you can expect it to get faster, still), it just doesn't compare to native code, and the fancy things "real" compression algorithms do; any form of bit-bashing is likely out of the question.
+
+So, it is important to see what is already available in the browser. The obvious is HTTP's GZIP content encoding; you should certainly enable that in your server. The less obvious choice is the UTF-8 character set. It turns out that UTF-8 serves as a passable variable-length encoding scheme.
