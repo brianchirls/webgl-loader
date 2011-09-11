@@ -6,7 +6,7 @@ First of all, let us not forget [http://goo.gl/body the original milion triangle
 
 Compared to [http://x3dom.org/x3dom/example/x3dom_imageGeometry.html x3dom's image geometry approach], [http://webgl-loader.googlecode.com/svn/trunk/samples/happy/happy.html the webgl-loader approach] should be preferred. Obviously, I'm biased, but there are technical justifications to this belief, aside from the fact that I was able to help launch [http://goo.gl/body Google Body] using similar technology.
 
-For now, ignore the visible chunk boundaries in the x3dom approach. It seems that they aren't correctly quantizing their vertices. However, this is a minor criticism of their implementation, and not their overall technique. I give the nice x3dom folks the benefit of the doubt and assume they will get their seams together, but I feel their technique has a few disadvantages:
+For now, ignore the visible chunk boundaries in the x3dom approach. It seems that they aren't correctly quantizing their vertices. However, this is a minor criticism of their implementation, and not their overall technique. I give the nice x3dom folks the benefit of the doubt and assume they will get their seams together, but I feel their technique has a few disadvantages.
 
 === x3dom image geometry requires vertex texture fetch ===
 
@@ -14,7 +14,7 @@ This has two overlapping problems: support, and performance. OpenGL ES 2.0 and, 
 
 === x3dom image geometry doesn't use index buffers ===
 
-This disadvantage makes the x3dom technique decidedly different (and inferior) to the similar technique of [http://research.microsoft.com/en-us/um/people/hoppe/proj/gim/ geometry images] which uses implicit connectivity. With index buffers or some kind of connectivity information, the x3dom approach cannot exploit vertex transform caches, and will have to re-process each vertex multiple (!6) times. The vertex-optimized approach of webgl-loader will only process each vertex [FifoCacheAnalysis ~1.2 times], thanks to its vertex cache optimizer.
+This disadvantage makes the x3dom technique decidedly different (and inferior) to the similar technique of [http://research.microsoft.com/en-us/um/people/hoppe/proj/gim/ geometry images] which uses implicit connectivity. With index buffers or some kind of connectivity information, the x3dom approach cannot exploit vertex transform caches, and will have to re-process each vertex multiple (~6) times. The vertex-optimized approach of webgl-loader will only process each vertex [FifoCacheAnalysis ~1.2 times], thanks to its vertex cache optimizer.
 
 === x3dom image geometry creates large numbers of draw batches ===
 
