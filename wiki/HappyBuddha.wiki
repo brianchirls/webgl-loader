@@ -1,7 +1,5 @@
 #summary Loading 1 Million Triangles
 
-First of all, let us not forget [http://goo.gl/body the original milion triangle WebGL program] (actually, it was more like 1.5 million...)
-
 === Intro ===
 
 The _raison d'être_ for webgl-loader is to efficiently load meshes using HTTP and JS. Until recently, webgl-loader didn't deal with very large meshes. In particular, it couldn't handle meshes that had with more vertices than WebGL could handle in a single `DrawIndexed` call. In practice, this meant that a single mesh could only be ~100k triangles.
