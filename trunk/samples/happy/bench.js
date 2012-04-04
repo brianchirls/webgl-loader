@@ -60,16 +60,12 @@ function decompressMesh(str, meshParams, decodeParams, callback) {
 function downloadMesh(path, meshEntry, decodeParams) {
   var downloadStart = Date.now();
   var req = new XMLHttpRequest();
-  function onprogress(e) {
-    if (e.total) {
-      progress.value = e.loaded;
-      progress.max = e.total;
-    }
-  }
+  var lastIndexRange = meshEntry[meshEntry.length - 1].indexRange;
+  progress.max = lastIndexRange[0] + 3*lastIndexRange[1];
 
   req.onload = function(e) {
     if (req.status === 200 || req.status === 0) {
-      onprogress(e);
+      progress.value = req.responseText.length;
       var downloadEnd = Date.now();
       for (var idx = 0; idx < meshEntry.length; ++idx) {
 	var meshParams = meshEntry[idx];
@@ -86,7 +82,9 @@ function downloadMesh(path, meshEntry, decodeParams) {
       out.innerHTML = 'Error downloading ' + path;
     }
   };
-  req.onprogress = onprogress;
+  req.onprogress = function() {
+    progress.value = req.responseText.length;
+  };
   req.open('GET', path, true);
   req.send(null);
 }
