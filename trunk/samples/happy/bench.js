@@ -3,50 +3,9 @@
 var out = window.document.getElementById('output');
 var progress = window.document.getElementById('progress');
 
-var decode_ms = 0;
-
-var start_drawing = false;
-
-function updateDecode(ms) {
-  decode_ms += ms;
-}
-
-function updateTotal(ms) {
-  start_drawing = true;
-  out.innerHTML = 'Decode time: ' + decode_ms +
-      ' ms, Total time: ' + ms + ' ms';
-}
-
-var DEFAULT_ATTRIB_ARRAYS = [
-  {
-    name: 'a_position',
-    size: 3,
-    stride: 8,
-    offset: 0,
-    decodeOffset: -4095,
-    decodeScale: 1/8191
-  },
-  {
-    name: 'a_texcoord',
-    size: 2,
-    stride: 8,
-    offset: 3,
-    decodeOffset: 0,
-    decodeScale: 1/1023
-  },
-  {
-    name: 'a_normal',
-    size: 3,
-    stride: 8,
-    offset: 5,
-    decodeOffset: -511,
-    decodeScale: 1/1023
-  }
-];
-
-function decompressInner_(str, inputStart, inputEnd,
-                          output, outputStart, stride,
-                          decodeOffset, decodeScale) {
+function decompressAttribsInner_(str, inputStart, inputEnd,
+                                 output, outputStart, stride,
+                                 decodeOffset, decodeScale) {
   var prev = 0;
   for (var j = inputStart; j < inputEnd; j++) {
     var code = str.charCodeAt(j);
@@ -56,74 +15,130 @@ function decompressInner_(str, inputStart, inputEnd,
   }
 }
 
-// This isn't really the correct algorithm anymore, but the inner loop
-// is the same.
-function decompressSimpleMesh(str, attribArrays) {
-  var numVerts = str.charCodeAt(0);
-  if (numVerts >= 0xE000) numVerts -= 0x0800;
-  numVerts++;
-
-  // Extract conversion parmaters from attribArrays.
-  var stride = attribArrays[0].stride;
-  var decodeOffsets = new Float32Array(stride);
-  var decodeScales = new Float32Array(stride);
-  var numArrays = attribArrays.length;
-  for (var i = 0; i < numArrays; i++) {
-    var attribArray = attribArrays[i];
-    var end = attribArray.offset + attribArray.size;
-    for (var j = attribArray.offset; j < end; j++) {
-      decodeOffsets[j] = attribArray.decodeOffset;
-      decodeScales[j] = attribArray.decodeScale;
-    }
-  }
-
-  // Decode attributes.
-  var inputOffset = 1;
-  var attribsOut = new Float32Array(stride * numVerts);
-  for (var i = 0; i < stride; i++) {
-    var end = inputOffset + numVerts;
-    var decodeScale = decodeScales[i];
-    if (decodeScale) {
-      // Assume if decodeScale is never set, simply ignore the
-      // attribute.
-      decompressInner_(str, inputOffset, end,
-                       attribsOut, i, stride,
-                       decodeOffsets[i], decodeScale);
-    }
-    inputOffset = end;
-  }
-
-  // Decode indices.
-  var numIndices = str.length - inputOffset;
-  var indicesOut = new Uint16Array(numIndices);
+function decompressIndices_(str, inputStart, numIndices,
+                            output, outputStart) {
   var highest = 0;
   for (var i = 0; i < numIndices; i++) {
-    var code = str.charCodeAt(i + inputOffset);
-    indicesOut[i] = highest - code;
+    var code = str.charCodeAt(inputStart++);
+    output[outputStart++] = highest - code;
     if (code == 0) {
       highest++;
     }
   }
-
-  return [attribsOut, indicesOut];
 }
 
-var meshes = [];
-var start_time = Date.now();
-var req = new XMLHttpRequest();
-req.onload = function(e) {
-  if (this.status === 200 || this.status === 0) {
-    var decodeStart = Date.now();
-    meshes[meshes.length] =
-        decompressSimpleMesh(this.responseText, DEFAULT_ATTRIB_ARRAYS);
-    updateDecode(Date.now() - decodeStart);
-    updateTotal(Date.now() - start_time);
-    progress.value = progress.max;
+function decompressMesh(str, meshParams, decodeParams, callback) {
+  // Extract conversion parameters from attribArrays.
+  var stride = decodeParams.decodeScales.length;
+  var decodeOffsets = decodeParams.decodeOffsets;
+  var decodeScales = decodeParams.decodeScales;
+  var attribStart = meshParams.attribRange[0];
+  var numVerts = meshParams.attribRange[1];
+
+  // Decode attributes.
+  var inputOffset = attribStart;
+  var attribsOut = new Float32Array(stride * numVerts);
+  for (var j = 0; j < stride; j++) {
+    var end = inputOffset + numVerts;
+    var decodeScale = decodeScales[j];
+    if (decodeScale) {
+      // Assume if decodeScale is never set, simply ignore the
+      // attribute.
+      decompressAttribsInner_(str, inputOffset, end,
+                              attribsOut, j, stride,
+                              decodeOffsets[j], decodeScale);
+    }
+    inputOffset = end;
   }
+
+  var indexStart = meshParams.indexRange[0];
+  var numIndices = 3*meshParams.indexRange[1];
+  var indicesOut = new Uint16Array(numIndices);
+  decompressIndices_(str, inputOffset, numIndices, indicesOut, 0);
+}
+
+function downloadMesh(path, meshEntry, decodeParams) {
+  var downloadStart = Date.now();
+  var req = new XMLHttpRequest();
+  function onprogress(e) {
+    if (e.total) {
+      progress.value = e.loaded;
+      progress.max = e.total;
+    }
+  }
+
+  req.onload = function(e) {
+    if (req.status === 200 || req.status === 0) {
+      onprogress(e);
+      var downloadEnd = Date.now();
+      for (var idx = 0; idx < meshEntry.length; ++idx) {
+	var meshParams = meshEntry[idx];
+	var indexRange = meshParams.indexRange;
+	var meshEnd = indexRange[0] + 3*indexRange[1];
+
+	decompressMesh(req.responseText, meshParams, decodeParams);
+      }
+      var decompressEnd = Date.now();
+
+      out.innerHTML = 'Download time: ' + (downloadEnd - downloadStart) +
+        ' ms, Decode time: ' + (decompressEnd - downloadEnd) + ' ms';
+    } else {
+      out.innerHTML = 'Error downloading ' + path;
+    }
+  };
+  req.onprogress = onprogress;
+  req.open('GET', path, true);
+  req.send(null);
+}
+
+var BUDDHA_DECODE_PARAMS = {
+  decodeOffsets: [-4095, -4095, -4095, 0, 0, -511, -511, -511],
+  decodeScales: [1/8191, 1/8191, 1/8191, 0, 0, 1/1023, 1/1023, 1/1023]
 };
-req.onprogress = function(e) {
-  progress.value = e.loaded;
-  progress.max = e.total;
-};
-req.open('GET', 'happy.utf8', true);
-req.send(null);
+
+downloadMesh("happy.utf8", [
+    { material: "",
+      attribRange: [0, 55294],
+      indexRange: [442352, 107195],
+    },
+    { material: "",
+      attribRange: [763937, 55294],
+      indexRange: [1206289, 107742],
+    },
+    { material: "",
+      attribRange: [1529515, 55294],
+      indexRange: [1971867, 107160]
+    },
+    { material: "",
+      attribRange: [2293347, 55294],
+      indexRange: [2735699, 106284],
+    },
+    { material: "",
+      attribRange: [3054551, 55294],
+      indexRange: [3496903, 107142],
+    },
+    { material: "",
+      attribRange: [3818329, 55294],
+      indexRange: [4260681, 107062],
+    },
+    { material: "",
+      attribRange: [4581867, 55294],
+      indexRange: [5024219, 105773],
+    },
+    { material: "",
+      attribRange: [5341538, 55294],
+      indexRange: [5783890, 107983],
+    },
+    { material: "",
+      attribRange: [6107839, 55294],
+      indexRange: [6550191, 104468],
+    },
+    { material: "",
+      attribRange: [6863595, 55294],
+      indexRange: [7305947, 102345],
+    },
+    { material: "",
+      attribRange: [7612982, 13733],
+      indexRange: [7722846, 24562],
+    },
+  ], BUDDHA_DECODE_PARAMS);
