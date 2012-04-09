@@ -54,7 +54,7 @@ void PrintCacheAnalysisRow(const IndexListT& indices, const size_t cache_size,
                            const size_t num_verts, const size_t num_tris) {
   const size_t misses = CountFifoCacheMisses(indices, cache_size);
   const double misses_as_double = static_cast<double>(misses);
-  printf("||%zu||%zu||%f||%f||\n", cache_size, misses,
+  printf("||" PRIuS "||" PRIuS "||%f||%f||\n", cache_size, misses,
          misses_as_double / num_verts, misses_as_double / num_tris);
 }
 
@@ -62,7 +62,7 @@ template <typename IndexListT>
 void PrintCacheAnalysisTable(const size_t count, const char** args,
                              const IndexListT& indices, 
                              const size_t num_verts, const size_t num_tris) {
-  printf("%zu vertices, %zu triangles\n\n", num_verts, num_tris);
+  printf(PRIuS " vertices, " PRIuS " triangles\n\n", num_verts, num_tris);
   puts("||Cache Size||# misses||ATVR||ACMR||");
   for (size_t i = 0; i < count; ++i) {
     int cache_size = atoi(args[i]);

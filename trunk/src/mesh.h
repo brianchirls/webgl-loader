@@ -511,7 +511,9 @@ class WavefrontObjFile {
   }
 
   void DumpDebug() const {
-    printf("positions size: %zu\ntexcoords size: %zu\nnormals size: %zu\n",
+    printf("positions size: " PRIuS "\n"
+	   "texcoords size: " PRIuS "\n"
+	   "normals size: " PRIuS "\n",
            positions_.size(), texcoords_.size(), normals_.size());
   }
  private:
