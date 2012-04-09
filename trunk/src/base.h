@@ -15,6 +15,7 @@
 #define WEBGL_LOADER_BASE_H_
 
 #include <ctype.h>
+#include <float.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,6 +32,10 @@ typedef unsigned int uint32;
 # define PRIuS "%Iu"
 #else  // Most compilers use the C99 format string.
 # define PRIuS "%zu"
+#endif
+
+#ifndef isfinite
+# define isfinite _finite
 #endif
 
 typedef std::vector<float> AttribList;
