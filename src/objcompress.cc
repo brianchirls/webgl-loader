@@ -110,9 +110,9 @@ int main(int argc, const char* argv[]) {
     size_t group_index = 0;
     for (size_t i = 0; i < webgl_meshes.size(); ++i) {
       printf("      { material: \'%s\',\n"
-             "        attribRange: [%zu, %zu],\n"
-             "        indexRange: [%zu, %zu],\n"
-             "        bboxes: %zu,\n"
+             "        attribRange: [" PRIuS ", " PRIuS "],\n"
+             "        indexRange: [" PRIuS ", " PRIuS "],\n"
+             "        bboxes: " PRIuS ",\n"
              "        names: [",
              material[i].c_str(),
              attrib_start[i], attrib_length[i],
@@ -146,7 +146,7 @@ int main(int argc, const char* argv[]) {
       }
       printf("],\n        lengths: [");
       for (size_t k = 0; k < buffered_lengths.size(); ++k) {
-        printf("%zu, ", buffered_lengths[k]);
+        printf(PRIuS ", ", buffered_lengths[k]);
       }
       puts("],\n      },");
     }
