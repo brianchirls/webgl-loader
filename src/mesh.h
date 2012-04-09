@@ -614,7 +614,22 @@ class WavefrontObjFile {
     if (floats.size() != normalDim()) {
       ErrorLine("bad normal", line_num);
     }
-    floats.AppendTo(&normals_);
+    // Normalize to avoid out-of-bounds quantization. This should be
+    // optional, in case someone wants to be using the normal magnitude as
+    // something meaningful.
+    const float x = floats[0];
+    const float y = floats[1];
+    const float z = floats[2];
+    const float scale = 1.0/sqrt(x*x + y*y + z*z);
+    if (isfinite(scale)) {
+      normals_.push_back(scale * x);
+      normals_.push_back(scale * y);
+      normals_.push_back(scale * z);
+    } else {
+      normals_.push_back(0);
+      normals_.push_back(0);
+      normals_.push_back(0);
+    }
   }
 
   // Parses faces and converts to triangle fans. This is not a
