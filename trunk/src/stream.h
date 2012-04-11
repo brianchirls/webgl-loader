@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2012 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you
 // may not use this file except in compliance with the License. You
@@ -23,14 +23,19 @@
 
 namespace webgl_loader {
 
+// An abstract interface to allow appending bytes to various streams.
 class ByteSinkInterface {
  public:
   virtual void Put(char c) = 0;
   virtual size_t PutN(const char* data, size_t len) = 0;
 };
 
+// None of the concrete implementations actually own the backing data.
+// They should be safe to copy.
+
 class FileSink : public ByteSinkInterface {
  public:
+  // |fp| is unowned and should not be NULL.
   explicit FileSink(FILE* fp)
     : fp_(fp) {
   }
@@ -49,6 +54,7 @@ class FileSink : public ByteSinkInterface {
 
 class VectorSink : public ByteSinkInterface {
  public:
+  // |vec| is unowned and should not be NULL.
   explicit VectorSink(std::vector<char>* vec)
     : vec_(vec) {
   }
@@ -68,6 +74,7 @@ class VectorSink : public ByteSinkInterface {
 
 class StringSink : public ByteSinkInterface {
  public:
+  // |str| is unowned and should not be NULL.
   explicit StringSink(std::string* str)
     : str_(str) {
   }
