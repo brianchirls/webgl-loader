@@ -45,7 +45,7 @@ class FileSink : public ByteSinkInterface {
   }
 
   virtual size_t PutN(const char* data, size_t len) {
-    return fwrite(data, len, 1, fp_);
+    return fwrite(data, 1, len, fp_);
   }
 
  private:
@@ -94,4 +94,4 @@ class StringSink : public ByteSinkInterface {
 
 }  // namespace webgl_loader
 
-#endif  // WEBGL_LOADER_STREAM_
+#endif  // WEBGL_LOADER_STREAM_H_

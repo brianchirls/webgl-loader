@@ -27,35 +27,9 @@
 #include <vector>
 
 #include "base.h"
+#include "bounds.h"
+#include "stream.h"
 #include "utf8.h"
-
-void DumpJsonFromQuantizedAttribs(const QuantizedAttribList& attribs) {
-  puts("var attribs = new Uint16Array([");
-  for (size_t i = 0; i < attribs.size(); i += 8) {
-    printf("%u,%hu,%hu,%hu,%hu,%hu,%hu,%hu,\n",
-           attribs[i + 0], attribs[i + 1], attribs[i + 2], attribs[i + 3],
-           attribs[i + 4], attribs[i + 5], attribs[i + 6], attribs[i + 7]);
-  }
-  puts("]);");
-}
-
-void DumpJsonFromInterleavedAttribs(const AttribList& attribs) {
-  puts("var attribs = new Float32Array([");
-  for (size_t i = 0; i < attribs.size(); i += 8) {
-    printf("%f,%f,%f,%f,%f,%f,%f,%f,\n",
-           attribs[i + 0], attribs[i + 1], attribs[i + 2], attribs[i + 3],
-           attribs[i + 4], attribs[i + 5], attribs[i + 6], attribs[i + 7]);
-  }
-  puts("]);");
-}
-
-void DumpJsonFromIndices(const IndexList& indices) {
-  puts("var indices = new Uint16Array([");
-  for (size_t i = 0; i < indices.size(); i += 3) {
-    printf("%d,%d,%d,\n", indices[i + 0], indices[i + 1], indices[i + 2]);
-  }
-  puts("]);");
-}
 
 // A short list of floats, useful for parsing a single vector
 // attribute.
@@ -234,51 +208,12 @@ static inline size_t positionDim() { return 3; }
 static inline size_t texcoordDim() { return 2; }
 static inline size_t normalDim() { return 3; }
 
-struct Bounds {
-  float mins[8];
-  float maxes[8];
-
-  void Clear() {
-    for (size_t i = 0; i < 8; ++i) {
-      mins[i] = FLT_MAX;
-      maxes[i] = -FLT_MAX;
-    }
-  }
-
-  void EncloseAttrib(const float* attribs) {
-    for (size_t i = 0; i < 8; ++i) {
-      const float attrib = attribs[i];
-      if (mins[i] > attrib) {
-        mins[i] = attrib;
-      }
-      if (maxes[i] < attrib) {
-        maxes[i] = attrib;
-      }
-    }
-  }
-
-  void Enclose(const AttribList& attribs) {
-    for (size_t i = 0; i < attribs.size(); i += 8) {
-      EncloseAttrib(&attribs[i]);
-    }
-  }
-
-  float UniformScale() const {
-    const float x = maxes[0] - mins[0];
-    const float y = maxes[1] - mins[1];
-    const float z = maxes[2] - mins[2];
-    return (x > y)  // TODO: max3
-        ? ((x > z) ? x : z)
-        : ((y > z) ? y : z);
-  }
-};
-
 // TODO(wonchun): Make a c'tor to properly initialize.
 struct GroupStart {
   size_t offset;  // offset into draw_mesh_.indices.
   unsigned int group_line;
   int min_index, max_index;  // range into attribs.
-  Bounds bounds;
+  webgl_loader::Bounds bounds;
 };
 
 class DrawBatch {
@@ -763,131 +698,5 @@ class WavefrontObjFile {
   std::map<std::string, int> group_counts_;
   unsigned int current_group_line_;
 };
-
-// TODO: make maxPosition et. al. configurable.
-struct BoundsParams {
-  static BoundsParams FromBounds(const Bounds& bounds) {
-    BoundsParams ret;
-    const float scale = bounds.UniformScale();
-    // Position. Use a uniform scale.
-    for (size_t i = 0; i < 3; ++i) {
-      const int maxPosition = (1 << 14) - 1;  // 16383;
-      ret.mins[i] = bounds.mins[i];
-      ret.scales[i] = scale;
-      ret.outputMaxes[i] = maxPosition;
-      ret.decodeOffsets[i] = maxPosition * bounds.mins[i] / scale;
-      ret.decodeScales[i] = scale / maxPosition;
-    }
-    // TexCoord.
-    // TODO: get bounds-dependent texcoords working!
-    for (size_t i = 3; i < 5; ++i) {
-      // const float texScale = bounds.maxes[i] - bounds.mins[i];
-      const int maxTexcoord = (1 << 10) - 1;  // 1023
-      ret.mins[i] = 0;  //bounds.mins[i];
-      ret.scales[i] = 1;  //texScale;
-      ret.outputMaxes[i] = maxTexcoord;
-      ret.decodeOffsets[i] = 0;  //maxTexcoord * bounds.mins[i] / texScale;
-      ret.decodeScales[i] = 1.0f / maxTexcoord;  // texScale / maxTexcoord;
-    }
-    // Normal. Always uniform range.
-    for (size_t i = 5; i < 8; ++i) {
-      ret.mins[i] = -1;
-      ret.scales[i] = 2.f;
-      ret.outputMaxes[i] = (1 << 10) - 1;  // 1023
-      ret.decodeOffsets[i] = 1 - (1 << 9);  // -511
-      ret.decodeScales[i] = 1.0 / 511;
-    }
-    return ret;
-  }
-
-  void DumpJson() {
-    puts("{");
-    printf("    decodeOffsets: [%d,%d,%d,%d,%d,%d,%d,%d],\n",
-           decodeOffsets[0], decodeOffsets[1], decodeOffsets[2],
-           decodeOffsets[3], decodeOffsets[4], decodeOffsets[5],
-           decodeOffsets[6], decodeOffsets[7]);
-    printf("    decodeScales: [%f,%f,%f,%f,%f,%f,%f,%f],\n",
-           decodeScales[0], decodeScales[1], decodeScales[2], decodeScales[3],
-           decodeScales[4], decodeScales[5], decodeScales[6], decodeScales[7]);
-    puts("  },");
-  }
-
-  float mins[8];
-  float scales[8];
-  int outputMaxes[8];
-  int decodeOffsets[8];
-  float decodeScales[8];
-};
-
-void AttribsToQuantizedAttribs(const AttribList& interleaved_attribs,
-                               const BoundsParams& bounds_params,
-                               QuantizedAttribList* quantized_attribs) {
-  quantized_attribs->resize(interleaved_attribs.size());
-  for (size_t i = 0; i < interleaved_attribs.size(); i += 8) {
-    for (size_t j = 0; j < 8; ++j) {
-      quantized_attribs->at(i + j) = Quantize(interleaved_attribs[i + j],
-                                              bounds_params.mins[j],
-                                              bounds_params.scales[j],
-                                              bounds_params.outputMaxes[j]);
-    }
-  }
-}
-
-uint16 ZigZag(int16 word) {
-  return (word >> 15) ^ (word << 1);
-}
-
-void CompressAABBToUtf8(const Bounds& bounds,
-                        const BoundsParams& total_bounds,
-                        std::vector<char>* utf8) {
-  const int maxPosition = (1 << 14) - 1;  // 16383;
-  uint16 mins[3] = { 0 };
-  uint16 maxes[3] = { 0 };
-  for (int i = 0; i < 3; ++i) {
-    float total_min = total_bounds.mins[i];
-    float total_scale = total_bounds.scales[i];
-    mins[i] = Quantize(bounds.mins[i], total_min, total_scale, maxPosition);
-    maxes[i] = Quantize(bounds.maxes[i], total_min, total_scale, maxPosition);
-  }
-  for (int i = 0; i < 3; ++i) {
-    Uint16ToUtf8(mins[i], utf8);
-  }
-  for (int i = 0; i < 3; ++i) {
-    Uint16ToUtf8(maxes[i] - mins[i], utf8);
-  }
-}
-
-void CompressIndicesToUtf8(const OptimizedIndexList& list,
-                           std::vector<char>* utf8) {
-  // For indices, we don't do delta from the most recent index, but
-  // from the high water mark. The assumption is that the high water
-  // mark only ever moves by one at a time. Foruntately, the vertex
-  // optimizer does that for us, to optimize for per-transform vertex
-  // fetch order.
-  uint16 index_high_water_mark = 0;
-  for (size_t i = 0; i < list.size(); ++i) {
-    const int index = list[i];
-    CHECK(index >= 0);
-    CHECK(index <= index_high_water_mark);
-    CHECK(Uint16ToUtf8(index_high_water_mark - index, utf8));
-    if (index == index_high_water_mark) {
-      ++index_high_water_mark;
-    }
-  }
-}
-
-void CompressQuantizedAttribsToUtf8(const QuantizedAttribList& attribs,
-                                    std::vector<char>* utf8) {
-  for (size_t i = 0; i < 8; ++i) {
-    // Use a transposed representation, and delta compression.
-    uint16 prev = 0;
-    for (size_t j = i; j < attribs.size(); j += 8) {
-      const uint16 word = attribs[j];
-      const uint16 za = ZigZag(static_cast<int16>(word - prev));
-      prev = word;
-      CHECK(Uint16ToUtf8(za, utf8));
-    }
-  }
-}
 
 #endif  // WEBGL_LOADER_MESH_H_

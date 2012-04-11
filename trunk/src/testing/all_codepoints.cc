@@ -20,15 +20,11 @@ exit;
 
 #include "../utf8.h"
 
-int main(int argc, char* argv[]) {
-  if (argc != 2) {
-    fprintf(stderr, "Usage: %s out.utf8\n\n"
-            "Generates all UTF-8 codepoints from 0 to 65,536, including\n"
-            "the surrogate pair range [0xD800, 0xDFFF].\n",
-            argv[0]);
-    return -1;
-  }
-  FILE* fp = fopen(argv[1], "wb");
+namespace webgl_loader {
+
+// Dumps all codepoints without any concern for the surrogate pair range.
+// Some code duplication from Uint16ToUtf8 as a result.
+void DumpAllCodepoints(FILE* fp) {
   for (size_t word = 0; word != 0x80; ++word) {
     PutChar(word, fp);
   }
@@ -44,6 +40,20 @@ int main(int argc, char* argv[]) {
     PutChar(kUtf8MoreBytesPrefix +
             static_cast<char>(word & kUtf8MoreBytesMask), fp);
   }
+}
+
+}  // namespace webgl_loader
+
+int main(int argc, char* argv[]) {
+  if (argc != 2) {
+    fprintf(stderr, "Usage: %s out.utf8\n\n"
+            "Generates all UTF-8 codepoints from 0 to 65,536, including\n"
+            "the surrogate pair range [0xD800, 0xDFFF].\n",
+            argv[0]);
+    return -1;
+  }
+  FILE* fp = fopen(argv[1], "wb");
+  webgl_loader::DumpAllCodepoints(fp);
   fclose(fp);
   return 0;
 }

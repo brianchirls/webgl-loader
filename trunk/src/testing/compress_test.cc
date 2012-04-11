@@ -16,24 +16,10 @@ exit;
 // implied. See the License for the specific language governing
 // permissions and limitations under the License.
 
-#include <stdio.h>
+#include "../compress.h"
 
-#include "../stream.h"
-#include "../utf8.h"
+// TODO: write tests!
 
 int main(int argc, char* argv[]) {
-  if (argc != 2) {
-    fprintf(stderr, "Usage: %s out.utf8\n\n"
-            "Generates all legal UTF-8 codepoints from 0 to 65,536, excluding\n"
-            "the surrogate pair range [0xD800, 0xDFFF].\n",
-            argv[0]);
-    return -1;
-  }
-  FILE* fp = fopen(argv[1], "wb");
-  webgl_loader::FileSink sink(fp);
-  for (size_t word = 0; word < 65536; ++word) {
-    webgl_loader::Uint16ToUtf8(word, &sink);
-  }
-  fclose(fp);
   return 0;
 }
