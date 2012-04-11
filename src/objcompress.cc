@@ -16,8 +16,11 @@ exit;
 // implied. See the License for the specific language governing
 // permissions and limitations under the License.
 
+#include "bounds.h"
+#include "compress.h"
 #include "mesh.h"
 #include "optimize.h"
+#include "stream.h"
 
 int main(int argc, const char* argv[]) {
   if (argc != 3) {
@@ -41,19 +44,21 @@ int main(int argc, const char* argv[]) {
   const MaterialBatches& batches = obj.material_batches();
 
   // Pass 1: compute bounds.
-  Bounds bounds;
+  webgl_loader::Bounds bounds;
   bounds.Clear();
   for (MaterialBatches::const_iterator iter = batches.begin();
        iter != batches.end(); ++iter) {
     const DrawBatch& draw_batch = iter->second;
     bounds.Enclose(draw_batch.draw_mesh().attribs);
   }
-  BoundsParams bounds_params = BoundsParams::FromBounds(bounds);
+  webgl_loader::BoundsParams bounds_params = 
+    webgl_loader::BoundsParams::FromBounds(bounds);
   printf("  decodeParams: ");
   bounds_params.DumpJson();
 
   puts("  urls: {");
   std::vector<char> utf8;
+  webgl_loader::VectorSink sink(&utf8);
   // Pass 2: quantize, optimize, compress, report.
   for (MaterialBatches::const_iterator iter = batches.begin();
        iter != batches.end(); ++iter) {
@@ -63,8 +68,8 @@ int main(int argc, const char* argv[]) {
     if (draw_mesh.indices.empty()) continue;
     
     QuantizedAttribList quantized_attribs;
-    AttribsToQuantizedAttribs(draw_mesh.attribs, bounds_params,
-                              &quantized_attribs);
+    webgl_loader::AttribsToQuantizedAttribs(draw_mesh.attribs, bounds_params,
+					    &quantized_attribs);
     VertexOptimizer vertex_optimizer(quantized_attribs);
     const std::vector<GroupStart>& group_starts = iter->second.group_starts();
     WebGLMeshList webgl_meshes;
@@ -91,8 +96,9 @@ int main(int argc, const char* argv[]) {
       const size_t num_indices = webgl_meshes[i].indices.size();
       const bool kBadSizes = num_attribs % 8 || num_indices % 3;
       CHECK(!kBadSizes);
-      CompressQuantizedAttribsToUtf8(webgl_meshes[i].attribs, &utf8);
-      CompressIndicesToUtf8(webgl_meshes[i].indices, &utf8);
+      webgl_loader::CompressQuantizedAttribsToUtf8(webgl_meshes[i].attribs, 
+						   &sink);
+      webgl_loader::CompressIndicesToUtf8(webgl_meshes[i].indices, &sink);
       material.push_back(iter->first);
       attrib_start.push_back(offset);
       attrib_length.push_back(num_attribs / 8);
@@ -129,8 +135,8 @@ int main(int argc, const char* argv[]) {
         // TODO: bbox info is better placed at the head of the file,
         // perhaps transposed. Also, when a group gets split between
         // batches, the bbox gets stored twice.
-        CompressAABBToUtf8(group_starts[group_index].bounds,
-                           bounds_params, &utf8);
+	webgl_loader::CompressAABBToUtf8(group_starts[group_index].bounds,
+					 bounds_params, &sink);
         offset += 6;
         if (next_start < webgl_index_length) {
           buffered_lengths.push_back(group_length);

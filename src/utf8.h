@@ -15,38 +15,47 @@
 #ifndef WEBGL_LOADER_UTF8_H_
 #define WEBGL_LOADER_UTF8_H_
 
-#include <vector>
-
 #include "base.h"
+#include "stream.h"
 
-const char kUtf8MoreBytesPrefix = static_cast<char>(0x80);
+namespace webgl_loader {
+
+const uint8 kUtf8MoreBytesPrefix = 0x80;
+const uint8 kUtf8TwoBytePrefix = 0xC0;
+const uint8 kUtf8ThreeBytePrefix = 0xE0;
+
+const uint16 kUtf8TwoByteLimit = 0x0800;
+const uint16 kUtf8SurrogatePairStart = 0xD800;
+const uint16 kUtf8SurrogatePairNum = 0x0800;
+const uint16 kUtf8EncodableEnd = 0x10000 - kUtf8SurrogatePairNum;
+
 const uint16 kUtf8MoreBytesMask = 0x3F;
-const char kUtf8TwoBytePrefix = static_cast<char>(0xC0);
-const char kUtf8ThreeBytePrefix = static_cast<char>(0xE0);
 
-bool Uint16ToUtf8(uint16 word, std::vector<char>* utf8) {
+bool Uint16ToUtf8(uint16 word, ByteSinkInterface* sink) {
   if (word < 0x80) {
-    utf8->push_back(static_cast<char>(word));
-  } else if (word < 0x800) {
-    utf8->push_back(kUtf8TwoBytePrefix + static_cast<char>(word >> 6));
-    utf8->push_back(kUtf8MoreBytesPrefix +
-                    static_cast<char>(word & kUtf8MoreBytesMask));
-  } else if (word < 0xF800) {
+    sink->Put(static_cast<char>(word));
+  } else if (word < kUtf8TwoByteLimit) {
+    sink->Put(static_cast<char>(kUtf8TwoBytePrefix + (word >> 6)));
+    sink->Put(static_cast<char>(kUtf8MoreBytesPrefix +
+				(word & kUtf8MoreBytesMask)));
+  } else if (word < kUtf8EncodableEnd) {
     // We can only encode 65535 - 2048 values because of illegal UTF-8
     // characters, such as surrogate pairs in [0xD800, 0xDFFF].
-    if (word >= 0xD800) {
+    if (word >= kUtf8SurrogatePairStart) {
       // Shift the result to avoid the surrogate pair range.
-      word += 0x0800;
+      word += kUtf8SurrogatePairNum;
     }
-    utf8->push_back(kUtf8ThreeBytePrefix + static_cast<char>(word >> 12));
-    utf8->push_back(kUtf8MoreBytesPrefix +
-                    static_cast<char>((word >> 6) & kUtf8MoreBytesMask));
-    utf8->push_back(kUtf8MoreBytesPrefix +
-                    static_cast<char>(word & kUtf8MoreBytesMask));
+    sink->Put(static_cast<char>(kUtf8ThreeBytePrefix + (word >> 12)));
+    sink->Put(static_cast<char>(kUtf8MoreBytesPrefix +
+				((word >> 6) & kUtf8MoreBytesMask)));
+    sink->Put(static_cast<char>(kUtf8MoreBytesPrefix +
+				(word & kUtf8MoreBytesMask)));
   } else {
     return false;
   }
   return true;
 }
+
+}  // namespace webgl_loader
 
 #endif  // WEBGL_LOADER_UTF8_H_
