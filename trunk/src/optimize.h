@@ -270,32 +270,4 @@ class VertexOptimizer {
   uint16 next_unused_index_;
 };
 
-#if 0
-void AnalyzeStrips(const WebGLMesh& mesh) {
-  // QuantizedAttribList attribs = mesh.attribs;
-  OptimizedIndexList indices = mesh.indices;
-
-  int last_tri[3] = { -1, -1, -1 };
-  for (int i = 0; i < indices.size(); i += 3) {
-    int last_edge[2];
-    last_edge[0] = last_tri[2];
-    last_edge[1] = last_tri[1];
-    
-    int barrett = i + 2;
-    for (int j = 0; j < 3; ++j) {
-      if (last_edge[0] == indices[i + barrett] &&
-	  last_edge[1] == indices[i + k]) {
-	break;
-      }
-      barret = j;
-    }
-
-    last_tri[0] = indices[i + 0];
-    last_tri[1] = indices[i + 1];
-    last_tri[2] = indices[i + 2];
-  }
-}
-
-#endif
-
-#endif  // WEBGL_LOADER_OPTIMIZE__
+#endif  // WEBGL_LOADER_OPTIMIZE_H_
