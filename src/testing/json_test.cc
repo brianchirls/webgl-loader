@@ -20,27 +20,139 @@ exit;
 #include "../stream.h"
 #include "../json.h"
 
-#include <iostream>
+#include <float.h>
+#include <limits.h>
+#include <iostream>  // DO NOT SUBMIT
 #include <string>
 
-using namespace webgl_loader;
+namespace webgl_loader {
+
+class JsonSinkTest {
+ public:
+  JsonSinkTest()
+    : sink_(&buf_), json_(&sink_) {
+  }
+
+  void TestNull() {
+    json_.PutNull();
+    CheckString("null");
+  }
+
+  void TestBool() {
+    json_.PutBool(true);
+    CheckString("true");
+    json_.PutBool(false);
+    CheckString("false");
+  }
+
+  void TestInt() {
+    for (int i = 0; i < 10; ++i) {
+      json_.PutInt(i);
+      char test[] = "0";
+      test[0] += i;
+      CheckString(test);
+    }
+    json_.PutInt(INT_MIN);
+    CheckString("-2147483648");
+    json_.PutInt(INT_MAX);
+    CheckString("2147483647");
+  }
+
+  void TestFloat() {
+    json_.PutFloat(123.456);
+    CheckString("123.456");
+    json_.PutFloat(FLT_MAX);
+    CheckString("3.40282e+38");
+    json_.PutFloat(-FLT_MAX);
+    CheckString("-3.40282e+38");
+    json_.PutFloat(FLT_MIN);
+    CheckString("1.17549e-38");
+    json_.PutFloat(-FLT_MIN);
+    CheckString("-1.17549e-38");
+  }
+
+  void TestString() {
+    json_.PutString("foo");
+    CheckString("\"foo\"");
+  }
+
+  void TestArray() {
+    json_.BeginArray();
+    for (int i = 0; i < 100; i += 10) {
+      json_.PutInt(i);
+    }
+    json_.End();
+    CheckString("[0,10,20,30,40,50,60,70,80,90]");
+
+    json_.BeginArray();
+    json_.BeginArray();
+    json_.PutNull();
+    json_.End();
+    json_.BeginArray();
+    json_.PutBool(false);
+    json_.PutBool(true);
+    json_.End();
+    for (int i = 0; i < 5; ++i) {
+      json_.PutInt(i*i);
+    }
+    json_.BeginObject();
+    json_.PutString("key");
+    json_.PutString("value");
+    json_.EndAll();
+
+    CheckString("[[null],[false,true],0,1,4,9,16,{\"key\":\"value\"}]");
+  }
+
+  void TestObject() {
+    json_.BeginObject();
+    json_.PutString("key1");
+    json_.PutInt(1);
+    json_.PutString("keyABC");
+    json_.PutString("abc");
+    json_.End();
+    
+    CheckString("{\"key1\":1,\"keyABC\":\"abc\"}");
+
+    json_.BeginObject();
+    json_.PutString("array");
+    json_.BeginArray();
+    for (int i = 1; i <= 3; ++i) {
+      json_.PutInt(i);
+    }
+    json_.End();
+    json_.BeginObject();
+    json_.PutString("key");
+    json_.PutString("value");
+    json_.End();
+    json_.PutString("k");
+    json_.PutFloat(0.1);
+    json_.End();
+
+    CheckString("{\"array\":[1,2,3]{\"key\":\"value\"},\"k\":0.1}");
+  }
+
+ private:
+  void CheckString(const char* str) {
+    CHECK(buf_ == str);
+    buf_.clear();
+  }
+
+  std::string buf_;
+  StringSink sink_;
+  JsonSink json_;
+};
+
+}  // namespace webgl_loader
 
 int main() {
-  std::string buf;
-  StringSink sink(&buf);
-  JsonSink json(&sink);
-  
-  json.BeginObject();
-  json.PutString("string");
-  json.PutBool(false);
-  json.PutString("key");
-  json.BeginArray();
-  for (int i = 1; i < 8; ++i) {
-    json.PutInt(i);
-  }
-  json.EndAll();
-  
-  std::cout << buf << std::endl;
-  
+  webgl_loader::JsonSinkTest tester;
+  tester.TestNull();
+  tester.TestBool();
+  tester.TestInt();
+  tester.TestFloat();
+  tester.TestString();
+  tester.TestArray();
+  tester.TestObject();
+    
   return 0;
 }

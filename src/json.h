@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2012 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you
 // may not use this file except in compliance with the License. You
@@ -26,27 +26,37 @@
 
 namespace webgl_loader {
 
+// JsonSink will generate JSON in the ByteSink passed in, but does
+// not actually own the backing data. Performs rudimentary grammar
+// checking. It will automatically add delimiting punctuation and
+// prevent non-String object keys.
+//
 // TODO: Pretty printing.
 class JsonSink {
  public:
+  // |sink| is unowned and should not be NULL.
   explicit JsonSink(ByteSinkInterface* sink)
     : sink_(sink) {
     state_.reserve(8);
     PushState(JSON_STATE_SIMPLE);
   }
 
+  // Automatically close values when JsonSink goes out of scope.
   ~JsonSink() {
     EndAll();
   }
 
+  // Methods to put scalar values into the JSON object. Aside from
+  // PutString, these should not be called when JsonSink expects an
+  // object key.
   void PutNull() {
     OnPutValue();
-    PutStringInternal("null", 4);
+    PutN("null", 4);
   }
 
   void PutBool(bool b) {
     OnPutValue();
-    PutStringInternal(b ? "true" : "false", b ? 4 : 5);
+    PutN(b ? "true" : "false", b ? 4 : 5);
   }
 
   void PutInt(int i) {
@@ -54,7 +64,7 @@ class JsonSink {
     char buf[kBufSize];
     int len = sprintf(buf, "%d", i);
     CHECK(len > 0 && len < kBufSize);
-    PutStringInternal(buf, len);
+    PutN(buf, len);
   }
 
   void PutFloat(float f) {
@@ -62,9 +72,10 @@ class JsonSink {
     char buf[kBufSize];
     int len = sprintf(buf, "%g", f);
     CHECK(len > 0 && len < kBufSize);
-    PutStringInternal(buf, len);
+    PutN(buf, len);
   }
 
+  // |str| should not be NULL.
   void PutString(const char* str) {
     // Strings are the only legal value for object keys.
     switch (GetState()) {
@@ -77,12 +88,13 @@ class JsonSink {
       UpdateState();
     }
 
-    // TODO: escaping!
+    // TODO: escaping.
     Put('\"');
-    PutStringInternal(str, strlen(str));
+    PutN(str, strlen(str));
     Put('\"');
   }
 
+  // Arrays and Objects are recursive JSON values.
   void BeginArray() {
     OnPutValue();
     Put('[');
@@ -95,6 +107,8 @@ class JsonSink {
     PushState(JSON_STATE_OBJECT_KEY_FIRST);
   }
 
+  // Close recurisve value, if necessary. Will automatically pad null
+  // values to unmatched object keys, if necessary.
   void End() {
     switch (GetState()) {
     case JSON_STATE_OBJECT_VALUE:
@@ -114,29 +128,34 @@ class JsonSink {
     PopState();
   }
   
+  // Close all values. Convenient way to end up with a valid JSON
+  // object.
   void EndAll() {
     while (GetState() != JSON_STATE_SIMPLE) End();
   }
   
  private:
+  // Conservative estimate of how many bytes to allocate on the stack
+  // as scratch space for int/float to NUL-terminated string.
   static const int kBufSize = 32;
   
+  // JsonSink needs to internally maintain some structural state in
+  // order to correctly delimit values with the appropriate
+  // punctuation. |State| indicates what the desired next value should
+  // be.
   enum State {
     JSON_STATE_OBJECT_VALUE,
     JSON_STATE_OBJECT_KEY_FIRST,
     JSON_STATE_OBJECT_KEY,
     JSON_STATE_ARRAY_FIRST,
     JSON_STATE_ARRAY,
-    JSON_STATE_SIMPLE,
+    JSON_STATE_SIMPLE
   };
 
+  // State stack helpers. Because JSON allows for recurisve values,
+  // maintain a stack of State enums.
   State GetState() const {
     return state_.back();
-  }
-
-  void CheckNotKey() const {
-    CHECK(GetState() != JSON_STATE_OBJECT_KEY_FIRST ||
-	  GetState() != JSON_STATE_OBJECT_KEY);
   }
 
   void SetState(State state) {
@@ -150,7 +169,8 @@ class JsonSink {
   void PopState() {
     state_.pop_back();
   }
-
+  
+  // State transducer.
   void UpdateState() {
     switch (GetState()) {
     case JSON_STATE_OBJECT_VALUE:
@@ -168,16 +188,24 @@ class JsonSink {
     }
   }
 
+  void CheckNotKey() const {
+    CHECK(GetState() != JSON_STATE_OBJECT_KEY_FIRST ||
+	  GetState() != JSON_STATE_OBJECT_KEY);
+  }
+
+  // A helper method for scalars (besides strings) that prevents them
+  // from being used as object keys.
   void OnPutValue() {
     CheckNotKey();
     UpdateState();
   }
 
+  // Convenience forwarding methods for sink_.
   void Put(char c) {
     sink_->Put(c);
   }
   
-  void PutStringInternal(const char* str, size_t len) {
+  void PutN(const char* str, size_t len) {
     sink_->PutN(str, len);
   }
   
