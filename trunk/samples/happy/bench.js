@@ -67,17 +67,19 @@ function downloadMesh(path, meshEntry, decodeParams) {
     if (req.status === 200 || req.status === 0) {
       progress.value = req.responseText.length;
       var downloadEnd = Date.now();
-      for (var idx = 0; idx < meshEntry.length; ++idx) {
-	var meshParams = meshEntry[idx];
-	var indexRange = meshParams.indexRange;
-	var meshEnd = indexRange[0] + 3*indexRange[1];
+      for (var count = 0; count < 16; count++) {
+        for (var idx = 0; idx < meshEntry.length; ++idx) {
+    	  var meshParams = meshEntry[idx];
+  	  var indexRange = meshParams.indexRange;
+	  var meshEnd = indexRange[0] + 3*indexRange[1];
 
-	decompressMesh(req.responseText, meshParams, decodeParams);
+	  decompressMesh(req.responseText, meshParams, decodeParams);
+        }
       }
       var decompressEnd = Date.now();
 
       out.innerHTML = 'Download time: ' + (downloadEnd - downloadStart) +
-        ' ms, Decode time: ' + (decompressEnd - downloadEnd) + ' ms';
+        ' ms, Decode (x16) time: ' + (decompressEnd - downloadEnd) + ' ms';
     } else {
       out.innerHTML = 'Error downloading ' + path;
     }
