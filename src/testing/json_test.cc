@@ -22,7 +22,6 @@ exit;
 
 #include <float.h>
 #include <limits.h>
-#include <iostream>  // DO NOT SUBMIT
 #include <string>
 
 namespace webgl_loader {

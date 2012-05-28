@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 
+// TODO: consider using C99 spellings.
 typedef unsigned char uint8;
 typedef unsigned short uint16;
 typedef short int16;
@@ -171,8 +172,17 @@ uint16 Quantize(float f, float in_min, float in_scale, uint16 out_max) {
 
 #ifndef CHECK
 # define CHECK(PRED) if (!(PRED)) {                                     \
-    fprintf(stderr, "%s:%d CHECK failed: " #PRED "\n", __FILE__, __LINE__); \
+    fprintf(stderr, "%s:%d CHECK failed: ", __FILE__, __LINE__);        \
+    fputs(#PRED "\n", stderr);                                          \
     exit(-1); } else
 #endif  // CHECK
+
+#ifndef DCHECK
+# ifdef DEBUG
+#  define DCHECK(PRED) CHECK(PRED)
+# else
+#  define DCHECK(PRED)
+# endif  // DEBUG
+#endif  // DCHECK
 
 #endif  // WEBGL_LOADER_BASE_H_
