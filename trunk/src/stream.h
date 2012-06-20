@@ -42,6 +42,15 @@ class ByteSinkInterface {
 // None of the concrete implementations actually own the backing data.
 // They should be safe to copy.
 
+class NullSink : public ByteSinkInterface {
+ public:
+  NullSink() { }
+
+  virtual void Put(char) { }
+  
+  virtual size_t PutN(const char*, size_t len) { return len; }
+};
+
 class FileSink : public ByteSinkInterface {
  public:
   // |fp| is unowned and must not be NULL.
@@ -223,6 +232,7 @@ class BufferedInputStream : public BufferedInput {
   BufferedInputStream(FILE* fp, char* buf, size_t size)
       : BufferedInput(RefillFread),
         fp_(fp),
+        buf_(buf),
         size_(size) {
     DCHECK(buf != NULL);
     // Disable buffering since we're doing it ourselves.
