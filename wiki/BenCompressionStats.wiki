@@ -17,9 +17,10 @@ An important note: positions are encoded using uniform quantization. That is, th
 
 *UTF-8* uses the compression in this project. Note that it is more effective than GZIP-ing the 16-bit JSON file. This is bit of an unfair comparison, though, since UTF-8 is the only binary-like format. Of course, GZIP still helps a bit!
 
----
+----
 
-Histogram of byte frequencies in ben.utf8.
+Histogram of byte frequencies in ben.utf8. Note that you can that the distribution of values has three exponential-looking regions. The largest one starts at 0, which represents the one-byte range. Next is the one that starts at 194, which represents the first byte in the two byte range. Interestingly, it is impossible to generate a value of 192 or 193, since those values should have been encoded as one-byte values. Finally, there is a faint exponential starting at 128, which represents subsequent bytes for two or three-byte values. The start of the three byte range, 224, doesn't register at all.
+
 
 {{{
   0: ---------------------------------------------------------------------o
