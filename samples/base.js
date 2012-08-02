@@ -107,4 +107,10 @@ function getHttpRequest(url, onload, opt_onprogress) {
   addListeners(req, LISTENERS);
   req.open('GET', url, true);
   req.send(null);
-};
+}
+
+function getJsonRequest(url, onjson) {
+  getHttpRequest(url,
+                 function(e) { onjson(JSON.parse(e.responseText)); },
+                 function() {});
+}
