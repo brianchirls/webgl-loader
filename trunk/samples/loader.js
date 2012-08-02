@@ -158,3 +158,10 @@ function downloadModel(path, model, callback) {
   var model = MODELS[model];
   downloadMeshes(path, model.urls, model.decodeParams, callback);
 }
+
+function downloadModelJson(jsonUrl, decodeParams, callback) {
+  getJsonRequest(jsonUrl, function(loaded) {
+    downloadMeshes(jsonUrl.substr(0,jsonUrl.lastIndexOf("/")+1),
+                   loaded.urls, decodeParams, callback);
+  });
+}

@@ -98,17 +98,17 @@ struct BoundsParams {
     return ret;
   }
 
-  void DumpJson() {
+  void DumpJson(FILE* out = stdout) {
     // TODO: use JsonSink.
-    puts("{");
-    printf("    decodeOffsets: [%d,%d,%d,%d,%d,%d,%d,%d],\n",
-           decodeOffsets[0], decodeOffsets[1], decodeOffsets[2],
-           decodeOffsets[3], decodeOffsets[4], decodeOffsets[5],
-           decodeOffsets[6], decodeOffsets[7]);
-    printf("    decodeScales: [%f,%f,%f,%f,%f,%f,%f,%f],\n",
-           decodeScales[0], decodeScales[1], decodeScales[2], decodeScales[3],
-           decodeScales[4], decodeScales[5], decodeScales[6], decodeScales[7]);
-    puts("  },");
+    fputs("{\n", out);
+    fprintf(out, "    \"decodeOffsets\": [%d,%d,%d,%d,%d,%d,%d,%d],\n",
+            decodeOffsets[0], decodeOffsets[1], decodeOffsets[2],
+            decodeOffsets[3], decodeOffsets[4], decodeOffsets[5],
+            decodeOffsets[6], decodeOffsets[7]);
+    fprintf(out, "    \"decodeScales\": [%f,%f,%f,%f,%f,%f,%f,%f]\n",
+            decodeScales[0], decodeScales[1], decodeScales[2], decodeScales[3],
+            decodeScales[4], decodeScales[5], decodeScales[6], decodeScales[7]);
+    fputs("  }", out);
   }
 
   float mins[8];

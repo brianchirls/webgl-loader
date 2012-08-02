@@ -313,17 +313,16 @@ struct Material {
   float Kd[3];
   std::string map_Kd;
 
-  void DumpJson() const {
-    printf("    \'%s\': {\n", name.c_str());
+  void DumpJson(FILE* out = stdout) const {
+    fprintf(out, "    \"%s\": { ", name.c_str());
     if (map_Kd.empty()) {
-      printf("      Kd: [%hu, %hu, %hu],\n",
-             Quantize(Kd[0], 0, 1, 255),
-             Quantize(Kd[1], 0, 1, 255),
-             Quantize(Kd[2], 0, 1, 255));
+      fprintf(out, "\"Kd\": [%hu, %hu, %hu] }",
+              Quantize(Kd[0], 0, 1, 255),
+              Quantize(Kd[1], 0, 1, 255),
+              Quantize(Kd[2], 0, 1, 255));
     } else {
-      printf("      map_Kd: \'%s\',\n", map_Kd.c_str());
+      fprintf(out, "\"map_Kd\": \"%s\" }", map_Kd.c_str());
     }
-    puts("    },");  // TODO: JSON serialization needs to be better!
   }
 };
 
