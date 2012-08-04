@@ -122,8 +122,11 @@ int main(int argc, const char* argv[]) {
               material[i].c_str(),
               attrib_start[i], attrib_length[i],
               index_start[i], index_length[i]);
+      if (i != webgl_meshes.size() - 1) {
+        fputs(",\n", json_out);
+      }
     }
-     const bool last = ++iter == batches.end();
+    const bool last = (++iter == batches.end());
     fputs(",\n" + last, json_out);
   }
   fputs("    ]\n", json_out);
