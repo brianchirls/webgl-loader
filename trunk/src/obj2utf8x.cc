@@ -1,5 +1,5 @@
 #if 0  // A cute trick to making this .cc self-building from shell.
-g++ $0 -O2 -Wall -Werror -o `basename $0 .cc`;
+g++ $0 -g -Wall -Werror -o `basename $0 .cc`;
 exit;
 #endif
 // Copyright 2011 Google Inc. All Rights Reserved.
@@ -61,7 +61,7 @@ int main(int argc, const char* argv[]) {
       webgl_loader::BoundsParams::FromBounds(bounds);
   fputs("  \"decodeParams\": ", json_out);
   bounds_params.DumpJson(json_out);
-  fputs(", \"urls\": {\n", json_out);
+  fputs(",\n  \"urls\": {\n", json_out);
   // Pass 2: quantize, optimize, compress, report.
   FILE* utf8_out_fp = fopen(argv[2], "wb");
   CHECK(utf8_out_fp != NULL);
@@ -97,31 +97,34 @@ int main(int argc, const char* argv[]) {
                                   &webgl_meshes);
 
     std::vector<std::string> material;
-    std::vector<size_t> attrib_start, attrib_length, index_start, index_length;
+    // TODO: is this buffering still necessary?
+    std::vector<size_t> attrib_start, attrib_length, 
+        code_start, code_length, num_tris;
     for (size_t i = 0; i < webgl_meshes.size(); ++i) {
       const size_t num_attribs = webgl_meshes[i].attribs.size();
       const size_t num_indices = webgl_meshes[i].indices.size();
       CHECK(num_attribs % 8 == 0);
       CHECK(num_indices % 3 == 0);
-      webgl_loader::CompressQuantizedAttribsToUtf8(webgl_meshes[i].attribs, 
-						   &utf8_sink);
-      webgl_loader::CompressIndicesToUtf8(webgl_meshes[i].indices, &utf8_sink);
+      webgl_loader::EdgeCachingCompressor compressor(webgl_meshes[i].attribs,
+                                                     webgl_meshes[i].indices);
+      compressor.Compress(&utf8_sink);
       material.push_back(iter->first);
       attrib_start.push_back(offset);
       attrib_length.push_back(num_attribs / 8);
-      index_start.push_back(offset + num_attribs);
-      index_length.push_back(num_indices / 3);
-      offset += num_attribs + num_indices;
+      code_start.push_back(offset + num_attribs);
+      code_length.push_back(compressor.codes().size());
+      num_tris.push_back(num_indices / 3);
+      offset += num_attribs + compressor.codes().size();
     }
     for (size_t i = 0; i < webgl_meshes.size(); ++i) {
       fprintf(json_out,
               "      { \"material\": \"%s\",\n"
               "        \"attribRange\": [" PRIuS ", " PRIuS "],\n"
-              "        \"indexRange\": [" PRIuS ", " PRIuS "]\n"
+              "        \"codeRange\": [" PRIuS ", " PRIuS ", " PRIuS "]\n"
               "      }",
               material[i].c_str(),
               attrib_start[i], attrib_length[i],
-              index_start[i], index_length[i]);
+              code_start[i], code_length[i], num_tris[i]);
       if (i != webgl_meshes.size() - 1) {
         fputs(",\n", json_out);
       }
