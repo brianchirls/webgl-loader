@@ -1,0 +1,26 @@
+{
+  "materials": {
+    "preview": { "Kd": [184, 136, 234] },
+    "nails": { "map_Kd": "hand.ppm" },
+    "skin": { "map_Kd": "hand.ppm" }
+  },
+  "decodeParams": {
+    "decodeOffsets": [-7473,-239,-8362,0,0,-511,-511,-511],
+    "decodeScales": [0.000050,0.000050,0.000050,0.000978,0.000978,0.001957,0.001957,0.001957]
+  }, "urls": {
+    "hand.utf8": [
+      { "material": "nails",
+        "attribRange": [0, 261],
+        "indexRange": [2088, 404]
+      },
+      { "material": "preview",
+        "attribRange": [3300, 688],
+        "indexRange": [8804, 1280]
+      },
+      { "material": "skin",
+        "attribRange": [12644, 8899],
+        "indexRange": [83836, 15451]
+      }
+    ]
+  }
+}

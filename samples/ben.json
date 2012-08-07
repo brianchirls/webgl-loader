@@ -1,0 +1,106 @@
+{
+  "materials": {
+    "gums": { "map_Kd": "James_Mouth_Gum_Lores.ppm" },
+    "tongue": { "map_Kd": "James_Tongue_Lores.ppm" },
+    "teethbottom": { "Kd": [251, 248, 248] },
+    "teethtop": { "Kd": [251, 248, 248] },
+    "topeyelashes": { "Kd": [66, 52, 42] },
+    "bottomeyelashes": { "Kd": [66, 52, 42] },
+    "head": { "map_Kd": "James_Face_Color_Hair_Lores.ppm" },
+    "eyetrans": { "Kd": [0, 0, 0] },
+    "pupil": { "Kd": [1, 1, 1] },
+    "iris": { "map_Kd": "James_Eye_Inner_Green.ppm" },
+    "eyeball": { "map_Kd": "James_Eye_Green.ppm" },
+    "pants": { "map_Kd": "MJeans1TEX_Lores.ppm" },
+    "tshirt3": { "map_Kd": "MTshirt3TEX_Lores.ppm" },
+    "skinbody": { "map_Kd": "James_Body_Lores.ppm" },
+    "fingernails": { "map_Kd": "Nail_Hand_01_Lores.ppm" },
+    "soleshoe": { "map_Kd": "MCasShoe1TEX_Lores.ppm" },
+    "sole": { "map_Kd": "MCasShoe1TEX_Lores.ppm" },
+    "laces": { "map_Kd": "MCasShoe1TEX_Lores.ppm" },
+    "bow": { "map_Kd": "MCasShoe1TEX_Lores.ppm" }
+  },
+  "decodeParams": {
+    "decodeOffsets": [-2533,-149,-6225,0,0,-511,-511,-511],
+    "decodeScales": [0.000043,0.000043,0.000043,0.000978,0.000978,0.001957,0.001957,0.001957]
+  }, "urls": {
+    "ben.utf8": [
+      { "material": "bottomeyelashes",
+        "attribRange": [0, 130],
+        "indexRange": [1040, 192]
+      },
+      { "material": "bow",
+        "attribRange": [1616, 1848],
+        "indexRange": [16400, 3224]
+      },
+      { "material": "eyeball",
+        "attribRange": [26072, 3834],
+        "indexRange": [56744, 7284]
+      },
+      { "material": "eyetrans",
+        "attribRange": [78596, 5248],
+        "indexRange": [120580, 9964]
+      },
+      { "material": "fingernails",
+        "attribRange": [150472, 1023],
+        "indexRange": [158656, 1228]
+      },
+      { "material": "gums",
+        "attribRange": [162340, 1446],
+        "indexRange": [173908, 2624]
+      },
+      { "material": "head",
+        "attribRange": [181780, 2219],
+        "indexRange": [199532, 4168]
+      },
+      { "material": "iris",
+        "attribRange": [212036, 902],
+        "indexRange": [219252, 1664]
+      },
+      { "material": "laces",
+        "attribRange": [224244, 1016],
+        "indexRange": [232372, 1792]
+      },
+      { "material": "pants",
+        "attribRange": [237748, 8200],
+        "indexRange": [303348, 15293]
+      },
+      { "material": "pupil",
+        "attribRange": [349227, 148],
+        "indexRange": [350411, 288]
+      },
+      { "material": "skinbody",
+        "attribRange": [351275, 4990],
+        "indexRange": [391195, 7830]
+      },
+      { "material": "sole",
+        "attribRange": [414685, 2588],
+        "indexRange": [435389, 4668]
+      },
+      { "material": "soleshoe",
+        "attribRange": [449393, 3164],
+        "indexRange": [474705, 5352]
+      },
+      { "material": "teethbottom",
+        "attribRange": [490761, 1235],
+        "indexRange": [500641, 1656]
+      },
+      { "material": "teethtop",
+        "attribRange": [505609, 1666],
+        "indexRange": [518937, 1816]
+      },
+      { "material": "tongue",
+        "attribRange": [524385, 845],
+        "indexRange": [531145, 1578]
+      },
+      { "material": "topeyelashes",
+        "attribRange": [535879, 130],
+        "indexRange": [536919, 192]
+      },
+      { "material": "tshirt3",
+        "attribRange": [537495, 4283],
+        "indexRange": [571759, 7216]
+      }
+    ]
+  }
+}
