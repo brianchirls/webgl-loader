@@ -1,0 +1,56 @@
+{
+  "materials": {
+  },
+  "decodeParams": {
+    "decodeOffsets": [-3813,4116,-3921,0,0,-511,-511,-511],
+    "decodeScales": [0.000012,0.000012,0.000012,0.000978,0.000978,0.001957,0.001957,0.001957]
+  },
+  "urls": {
+    "happy.utf8": [
+      { "material": "",
+        "attribRange": [0, 55294],
+        "codeRange": [442352, 215001, 107474]
+      },
+      { "material": "",
+        "attribRange": [657353, 55294],
+        "codeRange": [1099705, 215393, 107671]
+      },
+      { "material": "",
+        "attribRange": [1315098, 55294],
+        "codeRange": [1757450, 215179, 107550]
+      },
+      { "material": "",
+        "attribRange": [1972629, 55294],
+        "codeRange": [2414981, 216027, 107975]
+      },
+      { "material": "",
+        "attribRange": [2631008, 55294],
+        "codeRange": [3073360, 213121, 106518]
+      },
+      { "material": "",
+        "attribRange": [3286481, 55294],
+        "codeRange": [3728833, 214768, 107346]
+      },
+      { "material": "",
+        "attribRange": [3943601, 55294],
+        "codeRange": [4385953, 211439, 105659]
+      },
+      { "material": "",
+        "attribRange": [4597392, 55294],
+        "codeRange": [5039744, 213710, 106789]
+      },
+      { "material": "",
+        "attribRange": [5253454, 55294],
+        "codeRange": [5695806, 212303, 106083]
+      },
+      { "material": "",
+        "attribRange": [5908109, 55294],
+        "codeRange": [6350461, 205699, 102676]
+      },
+      { "material": "",
+        "attribRange": [6556160, 12461],
+        "codeRange": [6655848, 44141, 21975]
+      }
+    ]
+  }
+}

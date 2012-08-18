@@ -7,19 +7,20 @@
   "decodeParams": {
     "decodeOffsets": [-7473,-239,-8362,0,0,-511,-511,-511],
     "decodeScales": [0.000050,0.000050,0.000050,0.000978,0.000978,0.001957,0.001957,0.001957]
-  }, "urls": {
+  },
+  "urls": {
     "hand.utf8": [
       { "material": "nails",
         "attribRange": [0, 261],
-        "indexRange": [2088, 404]
+        "codeRange": [2088, 817, 404]
       },
       { "material": "preview",
-        "attribRange": [3300, 688],
-        "indexRange": [8804, 1280]
+        "attribRange": [2905, 688],
+        "codeRange": [8409, 2570, 1280]
       },
       { "material": "skin",
-        "attribRange": [12644, 8899],
-        "indexRange": [83836, 15451]
+        "attribRange": [10979, 8899],
+        "codeRange": [82171, 31026, 15451]
       }
     ]
   }
