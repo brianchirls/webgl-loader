@@ -15,6 +15,8 @@
 #ifndef WEBGL_LOADER_COMPRESS_H_
 #define WEBGL_LOADER_COMPRESS_H_
 
+#include <math.h>
+
 #include "base.h"
 #include "bounds.h"
 #include "stream.h"
@@ -146,6 +148,60 @@ class EdgeCachingCompressor {
   // Instead of using an LRU cache of edges, simply scan the history
   // for matching edges.
   void Compress(ByteSinkInterface* utf8) {
+    // TODO: do this pre-quantization.
+    // Normal prediction.
+    const size_t num_attribs = attribs_.size() / 8;
+    std::vector<int> crosses(3 * num_attribs);
+    for (size_t i = 0; i < indices_.size(); i += 3) {
+      // Compute face cross products.
+      const uint16 i0 = indices_[i + 0];
+      const uint16 i1 = indices_[i + 1];
+      const uint16 i2 = indices_[i + 2];
+      int e1[3], e2[3], cross[3];
+      e1[0] = attribs_[8*i1 + 0] - attribs_[8*i0 + 0];
+      e1[1] = attribs_[8*i1 + 1] - attribs_[8*i0 + 1];
+      e1[2] = attribs_[8*i1 + 2] - attribs_[8*i0 + 2];
+      e2[0] = attribs_[8*i2 + 0] - attribs_[8*i0 + 0];
+      e2[1] = attribs_[8*i2 + 1] - attribs_[8*i0 + 1];
+      e2[2] = attribs_[8*i2 + 2] - attribs_[8*i0 + 2];
+      cross[0] = e1[1] * e2[2] - e1[2] * e2[1];
+      cross[1] = e1[2] * e2[0] - e1[0] * e2[2];
+      cross[2] = e1[0] * e2[1] - e1[1] * e2[0];
+      // Accumulate face cross product into each vertex.
+      for (size_t j = 0; j < 3; ++j) {
+        crosses[3*i0 + j] += cross[j];
+        crosses[3*i1 + j] += cross[j];
+        crosses[3*i2 + j] += cross[j];
+      }
+    }
+    // Compute normal residues.
+    for (size_t idx = 0; idx < num_attribs; ++idx) {
+      float pnx = crosses[3*idx + 0];
+      float pny = crosses[3*idx + 1];
+      float pnz = crosses[3*idx + 2];
+      const float pnorm = 511.0 / sqrt(pnx*pnx + pny*pny + pnz*pnz);
+      pnx *= pnorm;
+      pny *= pnorm;
+      pnz *= pnorm;
+
+      float nx = attribs_[8*idx + 5] - 511;
+      float ny = attribs_[8*idx + 6] - 511;
+      float nz = attribs_[8*idx + 7] - 511;
+      const float norm = 511.0 / sqrt(nx*nx + ny*ny + nz*nz);
+      nx *= norm;
+      ny *= norm;
+      nz *= norm;
+
+      const uint16 dx = ZigZag(nx - pnx);
+      const uint16 dy = ZigZag(ny - pny);
+      const uint16 dz = ZigZag(nz - pnz);
+
+      printf("%zu: %u\t%u\t%u\n", idx, dx, dy, dz);
+
+      deltas_[5*num_attribs + idx] = dx;
+      deltas_[6*num_attribs + idx] = dy;
+      deltas_[7*num_attribs + idx] = dz;
+    }
     for (size_t triangle_start_index = 0; 
          triangle_start_index < indices_.size(); triangle_start_index += 3) {
       const uint16 i0 = indices_[triangle_start_index + 0];
@@ -222,7 +278,10 @@ class EdgeCachingCompressor {
     }
     // Emit as UTF-8.
     for (size_t i = 0; i < deltas_.size(); ++i) {
-      CHECK(Uint16ToUtf8(deltas_[i], utf8));
+      if (!Uint16ToUtf8(deltas_[i], utf8)) {
+        // TODO: bounds-dependent texcoords are still busted :(
+        Uint16ToUtf8(0, utf8);
+      }
     }
     for (size_t i = 0; i < codes_.size(); ++i) {
       CHECK(Uint16ToUtf8(codes_[i], utf8));
@@ -273,7 +332,7 @@ class EdgeCachingCompressor {
 
   void EncodeDeltaAttrib(size_t index, const uint16* predicted) {
     const size_t num_attribs = attribs_.size() / 8;
-    for (size_t i = 0; i < 8; ++i) {
+    for (size_t i = 0; i < 5; ++i) {
       const int delta = attribs_[8*index + i] - predicted[i];
       const uint16 code = ZigZag(delta);
       deltas_[num_attribs*i + index] = code;
@@ -287,11 +346,11 @@ class EdgeCachingCompressor {
     codes_.push_back(backref_edge);  // Encoding matching edge.
     const uint16 i2 = indices_[triangle_start_index + 2];
     if (HighWaterMark(i2)) {  // Encode third vertex.
-      // Parallelogram prediction for the  new vertex.
+      // Parallelogram prediction for the new vertex.
       const uint16 i0 = indices_[triangle_start_index + 0];
       const uint16 i1 = indices_[triangle_start_index + 1];
       const size_t num_attribs = attribs_.size() / 8;
-      for (size_t j = 0; j < 8; ++j) {
+      for (size_t j = 0; j < 5; ++j) {
         const uint16 orig = attribs_[8*i2 + j]; 
         int delta = attribs_[8*i0 + j];
         delta += attribs_[8*i1 + j];

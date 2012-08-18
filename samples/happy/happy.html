@@ -65,54 +65,7 @@ var BUDDHA_DECODE_PARAMS = {
   decodeScales: [1/8191, 1/8191, 1/8191, 0, 0, 1/1023, 1/1023, 1/1023]
 };
 
-downloadMeshes('', {
-  "happy.utf8": [
-    { material: "",
-      attribRange: [0, 55294],
-      indexRange: [442352, 107195],
-    },
-    { material: "",
-      attribRange: [763937, 55294],
-      indexRange: [1206289, 107742],
-    },
-    { material: "",
-      attribRange: [1529515, 55294],
-      indexRange: [1971867, 107160]
-    },
-    { material: "",
-      attribRange: [2293347, 55294],
-      indexRange: [2735699, 106284],
-    },
-    { material: "",
-      attribRange: [3054551, 55294],
-      indexRange: [3496903, 107142],
-    },
-    { material: "",
-      attribRange: [3818329, 55294],
-      indexRange: [4260681, 107062],
-    },
-    { material: "",
-      attribRange: [4581867, 55294],
-      indexRange: [5024219, 105773],
-    },
-    { material: "",
-      attribRange: [5341538, 55294],
-      indexRange: [5783890, 107983],
-    },
-    { material: "",
-      attribRange: [6107839, 55294],
-      indexRange: [6550191, 104468],
-    },
-    { material: "",
-      attribRange: [6863595, 55294],
-      indexRange: [7305947, 102345],
-    },
-    { material: "",
-      attribRange: [7612982, 13733],
-      indexRange: [7722846, 24562],
-    },
-  ],
-}, BUDDHA_DECODE_PARAMS, onLoad);
+downloadModelJson('happy.json', BUDDHA_DECODE_PARAMS, onLoad);
 
 </script>
 

@@ -1,5 +1,5 @@
 #if 0  // A cute trick to making this .cc self-building from shell.
-g++ $0 -g -Wall -Werror -o `basename $0 .cc`;
+g++ $0 -O2 -Wall -Werror -o `basename $0 .cc`;
 exit;
 #endif
 // Copyright 2011 Google Inc. All Rights Reserved.

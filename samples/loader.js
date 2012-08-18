@@ -135,7 +135,7 @@ function copyAttrib(stride, attribsOutFixed, lastAttrib, index) {
 function decodeAttrib2(str, stride, decodeOffsets, decodeScales, deltaStart,
                        numVerts, attribsOut, attribsOutFixed, lastAttrib,
                        index) {
-  for (var j = 0; j < stride; j++) {
+  for (var j = 0; j < 5; j++) {
     var code = str.charCodeAt(deltaStart + numVerts*j + index);
     var delta = (code >> 1) ^ (-(code & 1));
     lastAttrib[j] += delta;
@@ -143,6 +143,39 @@ function decodeAttrib2(str, stride, decodeOffsets, decodeScales, deltaStart,
     attribsOut[stride*index + j] =
       decodeScales[j] * (lastAttrib[j] + decodeOffsets[j]);
   }
+}
+
+function accumulateNormal(i0, i1, i2, attribsOutFixed, crosses) {
+  var p0x = attribsOutFixed[8*i0 + 0];
+  var p0y = attribsOutFixed[8*i0 + 1];
+  var p0z = attribsOutFixed[8*i0 + 2];
+  var p1x = attribsOutFixed[8*i1 + 0];
+  var p1y = attribsOutFixed[8*i1 + 1];
+  var p1z = attribsOutFixed[8*i1 + 2];
+  var p2x = attribsOutFixed[8*i2 + 0];
+  var p2y = attribsOutFixed[8*i2 + 1];
+  var p2z = attribsOutFixed[8*i2 + 2];
+  p1x -= p0x;
+  p1y -= p0y;
+  p1z -= p0z;
+  p2x -= p0x;
+  p2y -= p0y;
+  p2z -= p0z;
+  p0x = p1y*p2z - p1z*p2y;
+  p0y = p1z*p2x - p1x*p2z;
+  p0z = p1x*p2y - p1y*p2x;
+
+  crosses[3*i0 + 0] += p0x;
+  crosses[3*i0 + 1] += p0y;
+  crosses[3*i0 + 2] += p0z;
+
+  crosses[3*i1 + 0] += p0x;
+  crosses[3*i1 + 1] += p0y;
+  crosses[3*i1 + 2] += p0z;
+
+  crosses[3*i2 + 0] += p0x;
+  crosses[3*i2 + 1] += p0y;
+  crosses[3*i2 + 2] += p0z;
 }
 
 function decompressMesh2(str, meshParams, decodeParams, callback) {
@@ -157,6 +190,7 @@ function decompressMesh2(str, meshParams, decodeParams, callback) {
   var codeLength = meshParams.codeRange[1];
   var numIndices = 3*meshParams.codeRange[2];
   var indicesOut = new Uint16Array(numIndices);
+  var crosses = new Int32Array(3*numVerts);
   var lastAttrib = new Uint16Array(stride);
   var attribsOutFixed = new Uint16Array(stride * numVerts);
   var attribsOut = new Float32Array(stride * numVerts);
@@ -193,7 +227,7 @@ function decompressMesh2(str, meshParams, decodeParams, callback) {
       var index = highest - code;
       indicesOut[outputStart++] = index;
       if (code === 0) {
-        for (var j = 0; j < stride; j++) {
+        for (var j = 0; j < 5; j++) {
           var deltaCode = str.charCodeAt(deltaStart + numVerts*j + highest);
           var prediction = ((deltaCode >> 1) ^ (-(deltaCode & 1))) +
             attribsOutFixed[stride*i0 + j] +
@@ -208,6 +242,7 @@ function decompressMesh2(str, meshParams, decodeParams, callback) {
       } else {
         copyAttrib(stride, attribsOutFixed, lastAttrib, index);
       }
+      accumulateNormal(i0, i1, index, attribsOutFixed, crosses);
     } else {
       // Simple
       var index0 = highest - (code - max_backref);
@@ -233,7 +268,7 @@ function decompressMesh2(str, meshParams, decodeParams, callback) {
       var index2 = highest - code;
       indicesOut[outputStart++] = index2;
       if (code === 0) {
-        for (var j = 0; j < stride; j++) {
+        for (var j = 0; j < 5; j++) {
           lastAttrib[j] = (attribsOutFixed[stride*index0 + j] +
                            attribsOutFixed[stride*index1 + j]) / 2;
         }
@@ -243,7 +278,22 @@ function decompressMesh2(str, meshParams, decodeParams, callback) {
       } else {
         copyAttrib(stride, attribsOutFixed, lastAttrib, index2);
       }
+      accumulateNormal(index0, index1, index2, attribsOutFixed, crosses);
     }
+  }
+  for (var i = 0; i < numVerts; i++) {
+    var nx = crosses[3*i + 0];
+    var ny = crosses[3*i + 1];
+    var nz = crosses[3*i + 2];
+    var norm = 511.0 / Math.sqrt(nx*nx + ny*ny + nz*nz);
+
+    var cx = str.charCodeAt(deltaStart + 5*numVerts + i);
+    var cy = str.charCodeAt(deltaStart + 6*numVerts + i);
+    var cz = str.charCodeAt(deltaStart + 7*numVerts + i);
+
+    attribsOut[stride*i + 5] = norm*nx + ((cx >> 1) ^ (-(cx & 1)));
+    attribsOut[stride*i + 6] = norm*ny + ((cy >> 1) ^ (-(cy & 1)));
+    attribsOut[stride*i + 7] = norm*nz + ((cz >> 1) ^ (-(cz & 1)));
   }
   callback(attribsOut, indicesOut, undefined, meshParams);
 }
