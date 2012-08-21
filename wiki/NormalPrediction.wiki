@@ -6,7 +6,7 @@ Normals and positions are very closely related attributes. The idea for normal p
 
 Normals are a kind of derivative of position, which means that given a neighborhood of positions, it would be possible to make a good guess about what the normal will be. Fortunately, the index buffer provides this neighborhood information.
 
-TODO: justify this specialized technique, quantitatively. Describe (non-interaction with ParallelogramPrediction.
+TODO: justify this specialized technique, quantitatively. Describe (non-)interaction with ParallelogramPrediction.
 
 = Algorithm Description =
 
@@ -17,10 +17,10 @@ Here, I'll only describe the encoding in pseudocode. Decoding is straightforward
   # Pass I: For each TRIANGLE in INDICES:
     # Compute the TRIANGLE's cross product
     # For each INDEX in TRIANGLE:
-      # Add the cross product to CROSSES[INDEX]
+      # Add the cross product to CROSSES(INDEX)
   # Pass II: For each INDEX in ATTRIBS:
-    # Normalize CROSS[INDEX]
-    # Normalize the normal component of ATTRIBS[INDEX]
+    # Normalize CROSS(INDEX)
+    # Normalize the normal component of ATTRIBS(INDEX)
     # Encode their difference
 
 = Analysis =
