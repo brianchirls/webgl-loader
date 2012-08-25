@@ -196,8 +196,6 @@ class EdgeCachingCompressor {
       const uint16 dy = ZigZag(ny - pny);
       const uint16 dz = ZigZag(nz - pnz);
 
-      printf("%zu: %u\t%u\t%u\n", idx, dx, dy, dz);
-
       deltas_[5*num_attribs + idx] = dx;
       deltas_[6*num_attribs + idx] = dy;
       deltas_[7*num_attribs + idx] = dz;
