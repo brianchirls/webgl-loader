@@ -61,10 +61,11 @@ void main(void) {
 <script type="text/javascript">
 
 var BUDDHA_DECODE_PARAMS = {
-  decodeOffsets: [-4095, -4095, -4095, 0, 0, -511, -511, -511],
-  decodeScales: [1/8191, 1/8191, 1/8191, 0, 0, 1/1023, 1/1023, 1/1023]
+  decodeOffsets: [-1023, -1023, -1023, 0, 0, -127, -127, -127],
+  decodeScales: [1/2047, 1/2047, 1/2047, 0, 0, 1/255, 1/255, 1/255]
 };
 
+// 1,087,474 Triangles. 
 downloadModelJson('happy.json', BUDDHA_DECODE_PARAMS, onLoad);
 
 </script>
