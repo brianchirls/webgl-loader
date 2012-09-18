@@ -21,10 +21,20 @@ gl.uniform1i(renderer.program_.set_uniform.u_diffuse_sampler, 0);
 // be useful for things like serialization and simulation.
 mat4.translate(renderer.view_, [0, -0.5, -3]);
 
+var current_orientation = quat4.identity();
+var axis = quat4.create();
+
 function onDrag(dx, dy) {
-  var model = renderer.model_;
-  mat4.translate(model, [0, -2*dy/canvas.clientHeight, 0.0], model);
-  mat4.rotate(model, 10*dx / canvas.clientWidth, [0, 1, 0], model);
+  var w = canvas.clientWidth;
+  var h = canvas.clientHeight;
+
+  axis[0] = dy;
+  axis[1] = dx;
+  axis[2] = 0;
+  axis[3] = 0.1*Math.sqrt(w*w + h*h);
+  quat4.normalize(axis);
+  quat4.multiply(axis, current_orientation, current_orientation);
+  quat4.toMat4(current_orientation, renderer.model_);
 
   // renderer.scaleX = dx ? 0.5 : 1.0;
   // renderer.scaleY = dy ? 0.5 : 1.0;
